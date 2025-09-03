@@ -1,38 +1,45 @@
 name: Build APK from ZIP
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:   # يسمح لك بتشغيله يدويًا من Actions
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      # 1) جلب الكود من المستودع
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 2) تثبيت أداة unzip
       - name: Install unzip
         run: sudo apt-get update && sudo apt-get install -y unzip
 
+      # 3) فك ضغط المشروع
       - name: Unzip project
         run: |
           unzip ScreenRecorder.zip -d project
           echo "PROJECT_DIR=project" >> $GITHUB_ENV
 
+      # 4) إعداد JDK 17 (مطلوب لتشغيل Gradle)
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
+      # 5) إعطاء صلاحية التنفيذ لملف gradlew
       - name: Make Gradle executable
         run: chmod +x "${{ env.PROJECT_DIR }}/gradlew"
 
+      # 6) بناء نسخة Debug APK
       - name: Build debug APK
         run: |
           cd "${{ env.PROJECT_DIR }}"
           ./gradlew assembleDebug
 
+      # 7) رفع ملف APK الناتج كـ Artifact للتحميل
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
